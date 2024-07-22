@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    ratelimiters:
+      enabled: true
+resilience4j:
+  ratelimiter:
+    instances:
+      payment-service:
+        limit-for-period: 5
+        limit-refresh-period: 15s
+        timeout-duration: 10s
+        register-health-indicator: true
+
+logging:
+  config: classpath:log4j2.properties

@@ -1,0 +1,161 @@
+openapi: 3.0.2
+info:
+  version: '1.0.0'
+  title: Crypto Recommendation API
+tags:
+  - name: Crypto
+    description: Endpoints to query crypto information
+paths:
+  /cryptos/range/normalized/descending:
+    get:
+      summary: Returns a descending sorted list of all the cryptos, comparing the normalized range, i.e. (max-min)/min)
+      operationId: findNormalizedRangeSortedList
+      tags:
+        - Crypto
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/cryptoSymbol'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'https://opensource.zalando.com/restful-api-guidelines/models/problem-1.0.1.yaml#/Problem'
+              examples:
+                too-many-requests:
+                  value:
+                    errors:
+                      type: "/too-many-requests"
+                      title: "Too many requests"
+                      status: 429
+                      detail: "Number of requests exceeds 10 within one minute or the number of requests exceeds 5 within 20 seconds."
+
+  /cryptos/range/normalized/max:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/date'
+      summary: Returns the crypto with the highest normalized range for a specific day
+      operationId: findMaxRangeCrypto
+      tags:
+        - Crypto
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cryptoSymbol'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'https://opensource.zalando.com/restful-api-guidelines/models/problem-1.0.1.yaml#/Problem'
+              examples:
+                too-many-requests:
+                  value:
+                    errors:
+                      type: "/too-many-requests"
+                      title: "Too many requests"
+                      status: 429
+                      detail: "Number of requests exceeds 10 within one minute or the number of requests exceeds 5 within 20 seconds."
+
+  /cryptos/{cryptoName}:
+    get:
+      parameters:
+        - name: cryptoName
+          in: path
+          required: true
+          description: Valid Crypto Symbol
+          schema:
+            type: string
+        - $ref: '#/components/parameters/priceOption'
+      summary: Returns the oldest/newest/min/max values for a requested crypto
+      operationId: findCryptoByNameAndPriceOption
+      tags:
+        - Crypto
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/crypto'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'https://opensource.zalando.com/restful-api-guidelines/models/problem-1.0.1.yaml#/Problem'
+              examples:
+                too-many-requests:
+                  value:
+                    errors:
+                      type: "/too-many-requests"
+                      title: "Too many requests"
+                      status: 429
+                      detail: "Number of requests exceeds 10 within one minute or the number of requests exceeds 5 within 20 seconds."
+
+components:
+  schemas:
+    crypto:
+      description: Crypto information
+      type: object
+      properties:
+        timestamp:
+          description: The date of the crypto price is set
+          type: string
+          format: date-time
+          example: '2023-07-21T17:32:28Z'
+        cryptoName:
+          $ref: '#/components/schemas/cryptoSymbol'
+        price:
+          description: Crypto price
+          type: string
+          format: decimal
+          example: 22.2
+      required:
+        - timestamp
+        - cryptoName
+        - price
+    cryptoSymbol:
+      description: Symbol of processing crypto
+      type: string
+      enum:
+        - BTC
+        - DOGE
+        - ETH
+        - LTC
+        - XRP
+
+  parameters:
+    priceOption:
+      name: priceOption
+      description: Price option for which cryptographic information must be found
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+          - MAX
+          - MIN
+          - NEWEST
+          - OLDEST
+    date:
+      name: date
+      description: |
+        Represents a specific date in the format YYYY-MM-DD. 
+        This date is to be used to find the cryptocurrency with 
+        the highest normalized range for this day.
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+        example: '2022-07-21'
